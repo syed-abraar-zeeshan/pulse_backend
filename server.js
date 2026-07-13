@@ -1,6 +1,10 @@
+// const dns = require("dns");
+// dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
 require("dotenv").config();
 
 const connectDB = require("./src/config/db");
+const authRoutes = require("./src/features/auth/auth.routes");
 
 // Connect to MongoDB
 connectDB();
@@ -8,6 +12,10 @@ connectDB();
 // Create the Express app
 const express = require("express");
 const app = express();
+
+app.use(express.json());
+
+app.use('/api/auth', authRoutes);
 
 // Define the port
 const PORT = process.env.PORT || 4000;
