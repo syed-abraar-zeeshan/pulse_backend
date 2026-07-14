@@ -7,6 +7,8 @@ const connectDB = require("./src/config/db");
 
 const authRoutes = require("./src/features/auth/auth.routes");
 
+const profileRoutes = require("./src/features/profile/profile.routes");
+
 // Connect to MongoDB
 connectDB();
 
@@ -17,6 +19,7 @@ const app = express();
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes);
 
 // Define the port
 const PORT = process.env.PORT || 4000;
