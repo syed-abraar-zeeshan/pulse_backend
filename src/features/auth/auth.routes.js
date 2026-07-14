@@ -1,11 +1,11 @@
-const express = require("express");
-const router = express.Router();
+//This file defines the API endpoints.
+const express = require("express"); // This imports the Express package.
+const { signup, login } = require("./auth.controller"); //This imports the signup function from auth.controller.js
 
-router.post("/signup", (req, res) => {
-    res.status(200).json({
-        success:true,
-        message: "Signup route is working",
-    });
-});
+const router = express.Router(); // Create a router object
+
+router.post("/signup", signup);
+
+router.post("/login", login);
 
 module.exports = router;

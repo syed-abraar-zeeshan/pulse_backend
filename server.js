@@ -4,6 +4,7 @@
 require("dotenv").config();
 
 const connectDB = require("./src/config/db");
+
 const authRoutes = require("./src/features/auth/auth.routes");
 
 // Connect to MongoDB
@@ -15,7 +16,7 @@ const app = express();
 
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
+app.use("/api/auth", authRoutes);
 
 // Define the port
 const PORT = process.env.PORT || 4000;
