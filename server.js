@@ -1,5 +1,5 @@
-// const dns = require("dns");
-// dns.setServers(["8.8.8.8", "8.8.4.4"]);
+const dns = require("dns");
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 require("dotenv").config();
 
@@ -8,6 +8,7 @@ const connectDB = require("./src/config/db");
 const authRoutes = require("./src/features/auth/auth.routes");
 
 const profileRoutes = require("./src/features/profile/profile.routes");
+const errorMiddleware = require("./src/middlewares/error.middleware");
 
 // Connect to MongoDB
 connectDB();
@@ -21,6 +22,8 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/uploads", express.static("uploads"));
+
+app.use(errorMiddleware)
 
 // Define the port
 const PORT = process.env.PORT || 4000;
