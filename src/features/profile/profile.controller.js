@@ -1,5 +1,7 @@
 const User = require("../auth/user.model");
 const { updateProfileSchema } = require("./profile.validation");
+const fs = require("fs");
+const path = require("path");
 
 const getProfile = async (req, res) => {
   const user = await User.findById(req.user.userId);
@@ -50,15 +52,32 @@ const uploadProfilePicture = async (req, res) => {
     });
   }
 
-  const user = await User.findByIdAndUpdate(
-    req.user.userId,
-    {
-      profilePicture: `/uploads/${req.file.filename}`,
-    },
-    {
-      returnDocument: "after",
-    },
-  );
+  const user = await User.findById(req.user.userId);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  // Delete old profile picture
+  if (user.profilePicture) {
+    const oldImagePath = path.join(
+      __dirname,
+      "../../../",
+      user.profilePicture
+    );
+
+    if (fs.existsSync(oldImagePath)) {
+      fs.unlinkSync(oldImagePath);
+    }
+  }
+
+  // Save new image path
+  user.profilePicture = `/uploads/${req.file.filename}`;
+
+  await user.save();
 
   return res.status(200).json({
     success: true,
