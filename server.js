@@ -20,6 +20,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/uploads", express.static("uploads"));
 
 // Define the port
 const PORT = process.env.PORT || 4000;
@@ -36,3 +37,5 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+//express.static("uploads") is an Express middleware that makes the files inside the uploads folder accessible from the browser.

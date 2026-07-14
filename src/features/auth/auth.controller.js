@@ -36,22 +36,10 @@ const signup = async (req, res) => {
   // Save user to MongoDB
   const user = await User.create(userData);
 
-  const responseUser = {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    age: user.age,
-    gender: user.gender,
-    bio: user.bio,
-    profilePicture: user.profilePicture,
-    isOnline: user.isOnline,
-    createdAt: user.createdAt,
-  };
-
   return res.status(201).json({
     success: true,
     message: "User registered successfully",
-    data: responseUser,
+    data: user,
   });
 };
 
@@ -101,25 +89,12 @@ const login = async (req, res) => {
     },
   );
 
-  // Prepare response
-  const responseUser = {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    age: user.age,
-    gender: user.gender,
-    bio: user.bio,
-    profilePicture: user.profilePicture,
-    isOnline: user.isOnline,
-    createdAt: user.createdAt,
-  };
-
   // Send response
   return res.status(200).json({
     success: true,
     message: "Login successful",
     token,
-    data: responseUser,
+    data: user,
   });
 };
 
