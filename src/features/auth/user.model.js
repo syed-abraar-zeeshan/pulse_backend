@@ -46,6 +46,20 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    friendRequests: [
+      {
+        type: mongoose.Schema.Types.ObjectId, // we store only the ID instead of storing complete user object
+        ref: "User", //This ID belongs to the User collection.
+      },
+    ],
+
+    friends: [
+      {
+        type: mongoose.Schema.Types.ObjectId, // we store only the ID instead of storing complete user object
+        ref: "User", //This ID belongs to the User collection.
+      },
+    ],
   },
   {
     timestamps: true,
