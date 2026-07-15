@@ -40,6 +40,21 @@ const sendFriendRequest = async (req, res) => {
   });
 };
 
+const getFriendRequests = async (req, res) => {
+  const userId = req.user.userId;
+
+  const user = await User.findById(userId).populate(
+    "friendRequests",
+    "name email profilePicture",
+  );
+
+  return res.status(200).json({
+    success: true,
+    data: user.friendRequests,
+  });
+};
+
 module.exports = {
   sendFriendRequest,
+  getFriendRequests,
 };
