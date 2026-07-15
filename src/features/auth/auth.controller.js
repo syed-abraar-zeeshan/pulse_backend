@@ -36,10 +36,23 @@ const signup = async (req, res) => {
   // Save user to MongoDB
   const user = await User.create(userData);
 
+  const responseUser = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    age: user.age,
+    gender: user.gender,
+    bio: user.bio,
+    profilePicture: user.profilePicture,
+    isOnline: user.isOnline,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+
   return res.status(201).json({
     success: true,
     message: "User registered successfully",
-    data: user,
+    data: responseUser,
   });
 };
 
@@ -58,7 +71,7 @@ const login = async (req, res) => {
   const { email, password } = validationResult.data;
 
   // Find user by email
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).select("+password");
 
   if (!user) {
     return res.status(404).json({
@@ -89,12 +102,25 @@ const login = async (req, res) => {
     },
   );
 
+  const responseUser = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    age: user.age,
+    gender: user.gender,
+    bio: user.bio,
+    profilePicture: user.profilePicture,
+    isOnline: user.isOnline,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+
   // Send response
   return res.status(200).json({
     success: true,
     message: "Login successful",
     token,
-    data: user,
+    data: responseUser,
   });
 };
 
