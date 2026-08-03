@@ -152,6 +152,27 @@ const searchUsers = async (req, res) => {
   });
 };
 
+const searchFriends = async (req, res) => {
+  const searchText = req.query.name;
+  const currentUserId = req.user.userId;
+
+  const currentUser = await User.findById(currentUserId).populate({
+    path: "friends",
+    match: {
+      name: {
+        $regex: searchText,
+        $options: "i",
+      },
+    },
+    select: "name email profilePicture",
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: currentUser.friends,
+  });
+};
+
 module.exports = {
   sendFriendRequest,
   getFriendRequests,
@@ -159,4 +180,5 @@ module.exports = {
   getFriends,
   removeFriend,
   searchUsers,
+  searchFriends,
 };

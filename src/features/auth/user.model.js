@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
     email: {
       type: String,
       required: true,
@@ -14,10 +15,18 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+
     password: {
       type: String,
       required: true,
       select: false,
+    },
+
+    phoneNumber: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
     },
 
     age: {
@@ -29,7 +38,6 @@ const userSchema = new mongoose.Schema(
     gender: {
       type: String,
       enum: ["male", "female", "other"],
-      required: true,
     },
 
     bio: {
@@ -49,15 +57,15 @@ const userSchema = new mongoose.Schema(
 
     friendRequests: [
       {
-        type: mongoose.Schema.Types.ObjectId, // we store only the ID instead of storing complete user object
-        ref: "User", //This ID belongs to the User collection.
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
       },
     ],
 
     friends: [
       {
-        type: mongoose.Schema.Types.ObjectId, // we store only the ID instead of storing complete user object
-        ref: "User", //This ID belongs to the User collection.
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
       },
     ],
   },
@@ -66,14 +74,15 @@ const userSchema = new mongoose.Schema(
   },
 );
 
-const User = mongoose.model("User", userSchema);
-
 userSchema.set("toJSON", {
   transform: (doc, ret) => {
     ret.id = ret._id;
+
     delete ret._id;
     delete ret.__v;
   },
 });
+
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;

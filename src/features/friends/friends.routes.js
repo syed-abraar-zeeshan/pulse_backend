@@ -9,6 +9,7 @@ const {
   getFriends,
   removeFriend,
   searchUsers,
+  searchFriends,
 } = require("./friends.controller");
 
 const router = express.Router();
@@ -18,6 +19,7 @@ router.get("/requests", authMiddleware, getFriendRequests);
 router.post("/accept/:userId", authMiddleware, acceptFriendRequest);
 router.get("/", authMiddleware, getFriends);
 router.delete("/:userId", authMiddleware, removeFriend);
-router.get("/search", authMiddleware, searchUsers);
+// router.get("/search", authMiddleware, searchUsers);
+router.get("/search", authMiddleware, searchFriends);
 
 module.exports = router;

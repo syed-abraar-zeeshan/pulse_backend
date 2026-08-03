@@ -14,11 +14,13 @@ const signupSchema = z.object({
       "Password must contain uppercase, lowercase, number and special character",
     ),
 
-  gender: z.enum(["male", "female", "other"], {
-    message: "Gender must be male, female, or other",
-  }),
+  phoneNumber: z.string().e164(),
 
-  age: z.number().min(18, "Age must be at least 18").max(100, "Invalid age"),
+  // gender: z.enum(["male", "female", "other"], {
+  //   message: "Gender must be male, female, or other",
+  // }),
+
+  // age: z.number().min(18, "Age must be at least 18").max(100, "Invalid age"),
 });
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
