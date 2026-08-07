@@ -88,6 +88,30 @@ const acceptFriendRequest = async (req, res) => {
   });
 };
 
+const rejectFriendRequest = async (req, res) => {
+  const currentUserId = req.user.userId;
+  const senderId = req.params.userId;
+
+  const currentUser = await User.findById(currentUserId);
+
+  if (!currentUser) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  }
+
+  // Remove the pending request
+  currentUser.friendRequests.pull(senderId);
+
+  await currentUser.save();
+
+  return res.status(200).json({
+    success: true,
+    message: "Friend request rejected successfully",
+  });
+};
+
 const getFriends = async (req, res) => {
   const userId = req.user.userId;
 
@@ -177,6 +201,7 @@ module.exports = {
   sendFriendRequest,
   getFriendRequests,
   acceptFriendRequest,
+  rejectFriendRequest,
   getFriends,
   removeFriend,
   searchUsers,

@@ -6,6 +6,7 @@ const {
   sendFriendRequest,
   getFriendRequests,
   acceptFriendRequest,
+  rejectFriendRequest,
   getFriends,
   removeFriend,
   searchUsers,
@@ -17,6 +18,7 @@ const router = express.Router();
 router.post("/request/:userId", authMiddleware, sendFriendRequest);
 router.get("/requests", authMiddleware, getFriendRequests);
 router.post("/accept/:userId", authMiddleware, acceptFriendRequest);
+router.post("/reject/:userId", authMiddleware, rejectFriendRequest);
 router.get("/", authMiddleware, getFriends);
 router.delete("/:userId", authMiddleware, removeFriend);
 // router.get("/search", authMiddleware, searchUsers);
