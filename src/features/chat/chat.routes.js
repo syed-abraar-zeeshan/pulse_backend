@@ -6,6 +6,8 @@ const {
   sendMessage,
   getConversations,
   getMessages,
+  updateMessage,
+  deleteMessage,
   markConversationAsRead,
   markMessagesAsDelivered,
 } = require("./chat.controller");
@@ -14,6 +16,8 @@ const router = express.Router();
 
 router.post("/messages", authMiddleware, sendMessage);
 router.get("/conversations", authMiddleware, getConversations);
+router.patch("/messages/:messageId", authMiddleware, updateMessage);
+router.delete("/messages/:messageId", authMiddleware, deleteMessage);
 router.get(
   "/conversations/:conversationId/messages",
   authMiddleware,

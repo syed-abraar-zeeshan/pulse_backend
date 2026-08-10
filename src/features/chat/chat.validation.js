@@ -15,6 +15,15 @@ const sendMessageSchema = z.object({
   forwardedFrom: z.string().trim().optional(),
 });
 
+const updateMessageSchema = z.object({
+  content: z
+    .string()
+    .trim()
+    .min(1, "Message content is required")
+    .max(5000, "Message content is too long"),
+});
+
 module.exports = {
   sendMessageSchema,
+  updateMessageSchema,
 };

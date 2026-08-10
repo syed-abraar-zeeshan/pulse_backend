@@ -1,4 +1,4 @@
-const { sendMessageSchema } = require("./chat.validation");
+const { sendMessageSchema, updateMessageSchema } = require("./chat.validation");
 const Conversation = require("./models/conversation.model");
 const Message = require("./models/message.model");
 
@@ -169,7 +169,7 @@ const getMessages = async (req, res) => {
     id: message.id,
     sender: message.sender,
     type: message.messageType,
-    content: message.content,
+    content: message.deletedForEveryone ? null : message.content,
     replyTo: message.replyTo,
     forwardedFrom: message.forwardedFrom,
     status: {
@@ -199,6 +199,129 @@ const getMessages = async (req, res) => {
         hasPreviousPage: page > 1,
       },
     },
+  });
+};
+
+const updateMessage = async (req, res) => {
+  const userId = req.user.userId;
+  const messageId = req.params.messageId;
+
+  const validationResult = updateMessageSchema.safeParse(req.body);
+
+  if (!validationResult.success) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid request",
+      errors: validationResult.error.flatten(),
+    });
+  }
+
+  const { content } = validationResult.data;
+
+  const message = await Message.findById(messageId);
+
+  if (!message) {
+    return res.status(404).json({
+      success: false,
+      message: "Message not found",
+    });
+  }
+
+  if (message.sender.toString() !== userId) {
+    return res.status(403).json({
+      success: false,
+      message: "You can only edit your own messages",
+    });
+  }
+
+  if (message.messageType !== "text") {
+    return res.status(400).json({
+      success: false,
+      message: "Only text messages can be edited",
+    });
+  }
+
+  if (message.deletedForEveryone) {
+    return res.status(400).json({
+      success: false,
+      message: "Deleted messages cannot be edited",
+    });
+  }
+
+  message.content = content;
+  message.isEdited = true;
+  message.editedAt = new Date();
+
+  await message.save();
+
+  const populatedMessage = await Message.findById(message._id).populate(
+    "sender",
+    "name profilePicture isOnline",
+  );
+
+  const data = {
+    id: populatedMessage.id,
+    conversationId: populatedMessage.conversation,
+    sender: populatedMessage.sender,
+    type: populatedMessage.messageType,
+    content: populatedMessage.content,
+    replyTo: populatedMessage.replyTo,
+    forwardedFrom: populatedMessage.forwardedFrom,
+    status: {
+      deliveredAt: populatedMessage.deliveredAt,
+      readAt: populatedMessage.readAt,
+    },
+    isEdited: populatedMessage.isEdited,
+    editedAt: populatedMessage.editedAt,
+    deletedForEveryone: populatedMessage.deletedForEveryone,
+    reactions: populatedMessage.reactions,
+    createdAt: populatedMessage.createdAt,
+    updatedAt: populatedMessage.updatedAt,
+  };
+
+  return res.status(200).json({
+    success: true,
+    message: "Message updated successfully",
+    data,
+  });
+};
+
+const deleteMessage = async (req, res) => {
+  const userId = req.user.userId;
+  const messageId = req.params.messageId;
+
+  const message = await Message.findById(messageId);
+
+  if (!message) {
+    return res.status(404).json({
+      success: false,
+      message: "Message not found",
+    });
+  }
+
+  // Only the sender can delete the message
+  if (message.sender.toString() !== userId) {
+    return res.status(403).json({
+      success: false,
+      message: "You can only delete your own messages",
+    });
+  }
+
+  // Already deleted
+  if (message.deletedForEveryone) {
+    return res.status(400).json({
+      success: false,
+      message: "Message is already deleted",
+    });
+  }
+
+  message.deletedForEveryone = true;
+
+  await message.save();
+
+  return res.status(200).json({
+    success: true,
+    message: "Message deleted successfully",
   });
 };
 
@@ -282,6 +405,8 @@ module.exports = {
   sendMessage,
   getConversations,
   getMessages,
+  updateMessage,
+  deleteMessage,
   markConversationAsRead,
   markMessagesAsDelivered,
 };
