@@ -61,11 +61,203 @@ const sendMessage = async (req, res) => {
 
   await conversation.save();
 
+  const populatedMessage = await Message.findById(message._id).populate(
+    "sender",
+    "name profilePicture isOnline",
+  );
+
+  const data = {
+    id: populatedMessage.id,
+    conversationId: populatedMessage.conversation,
+    sender: populatedMessage.sender,
+    type: populatedMessage.messageType,
+    content: populatedMessage.content,
+    replyTo: populatedMessage.replyTo,
+    forwardedFrom: populatedMessage.forwardedFrom,
+    status: {
+      deliveredAt: populatedMessage.deliveredAt,
+      readAt: populatedMessage.readAt,
+    },
+    isEdited: populatedMessage.isEdited,
+    editedAt: populatedMessage.editedAt,
+    deletedForEveryone: populatedMessage.deletedForEveryone,
+    reactions: populatedMessage.reactions,
+    createdAt: populatedMessage.createdAt,
+    updatedAt: populatedMessage.updatedAt,
+  };
+
   return res.status(201).json({
     success: true,
     message: "Message sent successfully",
-    data: message,
+    data,
   });
 };
 
-module.exports = { sendMessage };
+const getConversations = async (req, res) => {
+  const userId = req.user.userId;
+
+  const conversations = await Conversation.find({
+    participants: userId,
+  })
+    .populate("participants", "name profilePicture isOnline")
+    .sort({ lastMessageAt: -1 });
+
+  const data = conversations.map((conversation) => {
+    const otherUser = conversation.participants.find(
+      (participant) => participant.id !== userId,
+    );
+
+    return {
+      conversationId: conversation.id,
+      user: otherUser,
+      lastMessage: {
+        content: conversation.lastMessage,
+        type: conversation.lastMessageType,
+        sentAt: conversation.lastMessageAt,
+      },
+      unreadCount: conversation.unreadCounts.get(userId) || 0,
+    };
+  });
+
+  return res.status(200).json({
+    success: true,
+    data,
+  });
+};
+
+const getMessages = async (req, res) => {
+  const userId = req.user.userId;
+  const conversationId = req.params.conversationId;
+
+  const conversation = await Conversation.findOne({
+    _id: conversationId,
+    participants: userId,
+  });
+
+  if (!conversation) {
+    return res.status(404).json({
+      success: false,
+      message: "Conversation not found",
+    });
+  }
+
+  const messages = await Message.find({
+    conversation: conversationId,
+  })
+    .populate("sender", "name profilePicture isOnline")
+    .sort({
+      createdAt: 1,
+    });
+
+  const data = messages.map((message) => ({
+    id: message.id,
+    sender: message.sender,
+    type: message.messageType,
+    content: message.content,
+    replyTo: message.replyTo,
+    forwardedFrom: message.forwardedFrom,
+    status: {
+      deliveredAt: message.deliveredAt,
+      readAt: message.readAt,
+    },
+    isEdited: message.isEdited,
+    editedAt: message.editedAt,
+    deletedForEveryone: message.deletedForEveryone,
+    reactions: message.reactions,
+    createdAt: message.createdAt,
+    updatedAt: message.updatedAt,
+  }));
+
+  return res.status(200).json({
+    success: true,
+    message: "Messages retrieved successfully",
+    data: {
+      conversationId: conversation.id,
+      messages: data,
+    },
+  });
+};
+
+const markConversationAsRead = async (req, res) => {
+  const userId = req.user.userId;
+  const conversationId = req.params.conversationId;
+
+  const conversation = await Conversation.findOne({
+    _id: conversationId,
+    participants: userId,
+  });
+
+  if (!conversation) {
+    return res.status(404).json({
+      success: false,
+      message: "Conversation not found",
+    });
+  }
+
+  await Message.updateMany(
+    {
+      conversation: conversationId,
+      sender: { $ne: userId },
+      readAt: null,
+    },
+    {
+      $set: {
+        readAt: new Date(),
+      },
+    },
+  );
+
+  conversation.unreadCounts.set(userId, 0);
+
+  await conversation.save();
+
+  return res.status(200).json({
+    success: true,
+    message: "Messages marked as read",
+  });
+};
+
+const markMessagesAsDelivered = async (req, res) => {
+  const userId = req.user.userId;
+  const conversationId = req.params.conversationId;
+
+  const conversation = await Conversation.findOne({
+    _id: conversationId,
+    participants: userId,
+  });
+
+  if (!conversation) {
+    return res.status(404).json({
+      success: false,
+      message: "Conversation not found",
+    });
+  }
+
+  const deliveredAt = new Date();
+
+  await Message.updateMany(
+    {
+      conversation: conversationId,
+      sender: { $ne: userId },
+      deliveredAt: null,
+    },
+    {
+      $set: {
+        deliveredAt,
+      },
+    },
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: "Messages marked as delivered",
+  });
+};
+
+module.exports = {
+  sendMessage,
+  getConversations,
+  getMessages,
+  markConversationAsRead,
+  markMessagesAsDelivered,
+};
