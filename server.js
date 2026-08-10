@@ -10,6 +10,7 @@ const authRoutes = require("./src/features/auth/auth.routes");
 const profileRoutes = require("./src/features/profile/profile.routes");
 const errorMiddleware = require("./src/middlewares/error.middleware");
 const friendsRoutes = require("./src/features/friends/friends.routes");
+const chatRoutes = require("./src/features/chat/chat.routes");
 
 const { Server } = require("socket.io");
 
@@ -30,6 +31,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api/friends", friendsRoutes);
+
+app.use("/api/chat", chatRoutes);
 
 app.use(errorMiddleware);
 

@@ -121,4 +121,3 @@ messageSchema.index({
 });
 
 module.exports = mongoose.model("Message", messageSchema);
-s;
