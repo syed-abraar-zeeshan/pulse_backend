@@ -126,6 +126,13 @@ const getConversations = async (req, res) => {
 };
 
 const getMessages = async (req, res) => {
+  const page = Math.max(Number.parseInt(req.query.page, 10) || 1, 1);
+  const limit = Math.min(
+    Math.max(Number.parseInt(req.query.limit, 10) || 20, 1),
+    100,
+  );
+  const skip = (page - 1) * limit;
+
   const userId = req.user.userId;
   const conversationId = req.params.conversationId;
 
@@ -141,13 +148,22 @@ const getMessages = async (req, res) => {
     });
   }
 
+  const totalMessages = await Message.countDocuments({
+    conversation: conversationId,
+  });
+
+  const totalPages = Math.max(Math.ceil(totalMessages / limit), 1);
+
   const messages = await Message.find({
     conversation: conversationId,
   })
     .populate("sender", "name profilePicture isOnline")
     .sort({
       createdAt: 1,
-    });
+      _id: 1,
+    })
+    .skip(skip)
+    .limit(limit);
 
   const data = messages.map((message) => ({
     id: message.id,
@@ -174,6 +190,14 @@ const getMessages = async (req, res) => {
     data: {
       conversationId: conversation.id,
       messages: data,
+      pagination: {
+        page,
+        limit,
+        totalMessages,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
     },
   });
 };
