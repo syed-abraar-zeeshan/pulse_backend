@@ -12,11 +12,8 @@ const errorMiddleware = require("./src/middlewares/error.middleware");
 const friendsRoutes = require("./src/features/friends/friends.routes");
 const chatRoutes = require("./src/features/chat/chat.routes");
 
-const { Server } = require("socket.io");
-
 const http = require("http");
-const jwt = require("jsonwebtoken"); //to verify the JWT token.
-const User = require("./src/features/auth/user.model"); // to update the user's status in MongoDB.
+const initializeSocket = require("./src/socket/socket");
 
 // Connect to MongoDB
 connectDB();
@@ -49,49 +46,7 @@ app.get("/", (req, res) => {
 
 //Create an HTTP server
 const server = http.createServer(app);
-
-// Create the Socket.IO server
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-  },
-});
-
-// server → your HTTP server.
-// io → your Socket.IO server instance.
-// cors → controls which apps are allowed to connect.
-
-// This is a Socket.IO middleware.
-io.use(async (socket, next) => {
-  try {
-    const token = socket.handshake.auth.token;
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    socket.userId = decoded.userId;
-    next();
-  } catch (error) {
-    next(new Error("Unauthorized"));
-  }
-});
-
-// Listen for new connections
-// This code runs every time a client connects to your backend.
-// Socket.IO gives each connected client a unique ID:
-io.on("connection", async (socket) => {
-  await User.findByIdAndUpdate(socket.userId, {
-    isOnline: true,
-  });
-
-  console.log(`User ${socket.userId} is online`);
-
-  socket.on("disconnect", async () => {
-    await User.findByIdAndUpdate(socket.userId, {
-      isOnline: false,
-    });
-
-    console.log(`User ${socket.userId} is offline`);
-  });
-});
+initializeSocket(server);
 
 // Start the server
 server.listen(PORT, () => {
