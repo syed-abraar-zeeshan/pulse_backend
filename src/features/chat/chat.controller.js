@@ -3,6 +3,7 @@ const Conversation = require("./models/conversation.model");
 const Message = require("./models/message.model");
 
 const User = require("../auth/user.model");
+const { createMessage } = require("./chat.service");
 
 const sendMessage = async (req, res) => {
   const senderId = req.user.userId;
@@ -29,37 +30,15 @@ const sendMessage = async (req, res) => {
     });
   }
 
-  let conversation = await Conversation.findOne({
-    participants: {
-      $all: [senderId, receiverId],
-    },
-  });
-
-  if (!conversation) {
-    conversation = await Conversation.create({
-      participants: [senderId, receiverId],
-    });
-  }
-
-  const message = await Message.create({
-    conversation: conversation._id,
-    sender: senderId,
+  const message = await createMessage({
+    senderId,
+    receiverId,
     messageType,
     content,
     metadata,
-    replyTo: replyTo || null,
-    forwardedFrom: forwardedFrom || null,
+    replyTo,
+    forwardedFrom,
   });
-
-  conversation.lastMessage = content;
-  conversation.lastMessageType = messageType;
-  conversation.lastMessageAt = new Date();
-
-  const currentUnreadCount = conversation.unreadCounts.get(receiverId) || 0;
-
-  conversation.unreadCounts.set(receiverId, currentUnreadCount + 1);
-
-  await conversation.save();
 
   const populatedMessage = await Message.findById(message._id).populate(
     "sender",
